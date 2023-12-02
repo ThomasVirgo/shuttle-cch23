@@ -14,15 +14,29 @@ async fn day1(path: Path<String>) -> Result<HttpResponse, Error> {
     }
     let params: Vec<&str> = params_str.split("/").collect();
     let length = params.len();
-    println!("{:?}", params);
+
     let mut result: u32 = 0;
     if length == 1 {
-        let num = params.first().clone().unwrap().parse::<u32>().unwrap();
-        return Ok(HttpResponse::Ok().json(num.pow(3)));
-    } else {
-        for num_str in params {
-            result = result ^ num_str.parse::<u32>().unwrap();
-            println!("{}", result);
+        let num = params.first();
+        return match num {
+            Some(n) => match n.parse::<u32>() {
+                Ok(i) => Ok(HttpResponse::Ok().json(i.pow(3))),
+                Err(_) => {
+                    Ok(HttpResponse::BadRequest().json("unable to parse parameter to an integer"))
+                }
+            },
+            None => Ok(HttpResponse::BadRequest().json("no params provided")),
+        };
+    }
+
+    for num_str in params {
+        match num_str.parse::<u32>() {
+            Ok(i) => result = result ^ i,
+            Err(_) => {
+                return Ok(
+                    HttpResponse::BadRequest().json("unable to parse parameter to an integer")
+                )
+            }
         }
     }
     result = result.pow(3);
